@@ -1,0 +1,52 @@
+{
+  "name": "s3k-core",
+  "version": "0.9.0",
+  "engines": {
+    "node": ">=14.15.0"
+  },
+  "description": "S3 core utilities for S3K module.",
+  "main": "lib/S3k.js",
+  "directories": {
+    "test": "test"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.857.0",
+    "aws2": "^0.4.0",
+    "aws3": "^0.2.1",
+    "aws4": "^1.11.0",
+    "lazyness": "^1.2.0",
+    "logfella": "^1.3.10",
+    "seventh": "^0.7.40"
+  },
+  "scripts": {
+    "test": "tea-time -R dot"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cronvel/s3k-core.git"
+  },
+  "keywords": [
+    "http",
+    "request"
+  ],
+  "author": "Cédric Ronvel",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cronvel/s3k-core/issues"
+  },
+  "config": {
+    "tea-time": {
+      "coverDir": [
+        "lib"
+      ]
+    }
+  },
+  "copyright": {
+    "title": "S3K core",
+    "years": [
+      2018,
+      2021
+    ],
+    "owner": "Cédric Ronvel"
+  }
+}
