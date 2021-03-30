@@ -134,26 +134,60 @@ describe( "Operation on objects" , () => {
 	it( "should put-get-delete-get some data" , async function() {
 		this.timeout( 10000 ) ;
 		
-		var s3 = new S3k( config ) ;
-		var result = await s3.putObject( { Key: "bob2.txt" , Body: "OMG, more bob content!\n" } ) ;
-		//console.log( "result:" , result ) ;
-		var data = await s3.getObject( { Key: "bob2.txt" } ) ;
-		//console.log( data ) ;
-		var content = data.Body.toString() ;
-		//console.log( content ) ;
+		var result , data , content ,
+			s3 = new S3k( config ) ;
+
+		result = await s3.putObject( { Key: "bob2.txt" , Body: "OMG, more bob content!\n" } ) ;
+
+		data = await s3.getObject( { Key: "bob2.txt" } ) ;
+		content = data.Body.toString() ;
 		expect( content ).to.be( "OMG, more bob content!\n" ) ;
 		
-		var result = await s3.deleteObject( { Key: "bob2.txt" } ) ;
-		//console.log( "result:" , result ) ;
+		result = await s3.deleteObject( { Key: "bob2.txt" } ) ;
+
+		await expect( () => s3.getObject( { Key: "bob2.txt" } ) ).to.eventually.throw( Error , { statusCode: 404 , code: 'NoSuchKey' } ) ;
+	} ) ;
+
+	it( "should put multiple data, and delete a 'file' (a prefix)" , async function() {
+		this.timeout( 10000 ) ;
 		
-		try {
-			await s3.getObject( { Key: "bob2.txt" } ) ;
-			expect().fail( 'Should throw' ) ;
-		}
-		catch ( error ) {
-			console.log( 'error:' , error ) ;
-			expect( error ).to.be.partially.like( { statusCode: 404 , code: 'NoSuchKey' } ) ;
-		}
+		var result , data , content ,
+			s3 = new S3k( config ) ;
+
+		result = await s3.putObject( { Key: "top.txt" , Body: "top-level" } ) ;
+		result = await s3.putObject( { Key: "dir/bob.txt" , Body: "bob content.\n" } ) ;
+		result = await s3.putObject( { Key: "dir/bob2.txt" , Body: "OMG, more bob content!\n" } ) ;
+		result = await s3.putObject( { Key: "dir/file.png" , Body: "not a png" } ) ;
+
+		data = await s3.getObject( { Key: "top.txt" } ) ;
+		content = data.Body.toString() ;
+		expect( content ).to.be( "top-level" ) ;
+
+		data = await s3.getObject( { Key: "dir/bob.txt" } ) ;
+		content = data.Body.toString() ;
+		expect( content ).to.be( "bob content.\n" ) ;
+
+		data = await s3.getObject( { Key: "dir/bob2.txt" } ) ;
+		content = data.Body.toString() ;
+		expect( content ).to.be( "OMG, more bob content!\n" ) ;
+
+		data = await s3.getObject( { Key: "dir/file.png" } ) ;
+		content = data.Body.toString() ;
+		expect( content ).to.be( "not a png" ) ;
+		
+		
+		// Now delete the directory
+		result = await s3.deleteDirectory( { Directory: "dir" } ) ;
+		
+		// Should be still there, because it's not in the prefix
+		data = await s3.getObject( { Key: "top.txt" } ) ;
+		content = data.Body.toString() ;
+		expect( content ).to.be( "top-level" ) ;
+
+		// The three other should be deleted
+		await expect( () => s3.getObject( { Key: "dir/bob.txt" } ) ).to.eventually.throw( Error , { statusCode: 404 , code: 'NoSuchKey' } ) ;
+		await expect( () => s3.getObject( { Key: "dir/bob2.txt" } ) ).to.eventually.throw( Error , { statusCode: 404 , code: 'NoSuchKey' } ) ;
+		await expect( () => s3.getObject( { Key: "dir/file.png" } ) ).to.eventually.throw( Error , { statusCode: 404 , code: 'NoSuchKey' } ) ;
 	} ) ;
 } ) ;
 
